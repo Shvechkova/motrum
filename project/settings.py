@@ -37,9 +37,7 @@ ALLOWED_HOSTS = [
 ]
 
 
-INTERNAL_IPS = [
-    "127.0.0.1","localhost"
-]
+INTERNAL_IPS = ["127.0.0.1", "localhost"]
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -70,8 +68,14 @@ INSTALLED_APPS = [
     "django.contrib.postgres",
     "debug_toolbar",
     "simple_history",
-   
     # 'reversion'
+    "sass_processor",
+]
+
+STATICFILES_FINDERS = [
+    "django.contrib.staticfiles.finders.FileSystemFinder",
+    "django.contrib.staticfiles.finders.AppDirectoriesFinder",
+    "sass_processor.finders.CssFinder",
 ]
 
 MIDDLEWARE = [
@@ -91,7 +95,9 @@ ROOT_URLCONF = "project.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [
+            BASE_DIR / "apps/core/templates",
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -158,17 +164,20 @@ AUTH_USER_MODEL = "user.AdminUser"
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = "static/"
-STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+STATIC_URL = "/static/"
+
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = "/media/"
 FILE_UPLOAD_MAX_MEMORY_SIZE = 104857600
 USE_DJANGO_JQUERY = True
 
+STATIC_ROOT = BASE_DIR / "static"
+SASS_PROCESSOR_ROOT = STATIC_ROOT
+
 SIMPLE_HISTORY_REVERT_DISABLED = True
 SIMPLE_HISTORY_ENFORCE_HISTORY_MODEL_PERMISSIONS = True
-SIMPLE_HISTORY_HISTORY_CHANGE_REASON_USE_TEXT_FIELD=True
+SIMPLE_HISTORY_HISTORY_CHANGE_REASON_USE_TEXT_FIELD = True
 # JQUERY_URL = True
 # AUTH_USER_MODEL = "user.CustomAdminUser"
 

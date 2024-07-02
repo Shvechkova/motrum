@@ -1,0 +1,136 @@
+.specification-content {
+  padding: 1rem 0.938rem;
+  .head-title {
+    font-size: 2rem;
+    margin: 0;
+    padding: 0;
+  }
+  .specification-title {
+    color: brown;
+    font-size: 1.5rem;
+    margin-top: 1rem;
+  }
+  .spetification-product-catalog {
+    display: flex;
+    flex-direction: column;
+    margin-top: 1rem;
+    gap: 0.5rem;
+    .catalog-item {
+      background-color: lightgray;
+      border-radius: 5px;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      .descripton {
+        display: flex;
+        flex-direction: column;
+        .article-motrum {
+          font-size: 0.875rem;
+          color: gray;
+        }
+        .article-saler {
+          font-size: 0.875rem;
+          color: gray;
+        }
+        .name {
+          font-size: 1.25rem;
+          font-weight: 600;
+          margin-bottom: 0.5rem;
+        }
+        .price {
+          font-size: 1.2rem;
+          font-weight: 600;
+          margin-top: 0.7rem;
+          span {
+            font-size: 1.3rem;
+          }
+        }
+      }
+      .quantity-buttons {
+        display: flex;
+        align-items: flex-end;
+        position: relative;
+        button {
+          border-radius: 5px;
+          border: 0.125rem solid black;
+          font-size: 1.125rem;
+          width: 3rem;
+          cursor: pointer;
+          &:disabled,
+          &[disabled] {
+            cursor: auto;
+          }
+          &.minus-button {
+            margin-right: 2rem;
+          }
+          &.plus-button {
+            margin-left: 2rem;
+          }
+        }
+        span {
+          font-size: 2rem;
+          font-weight: bold;
+          position: absolute;
+          top: -19%;
+          left: 44.5%;
+        }
+      }
+    }
+    .pagintion {
+      display: flex;
+      margin: 0 auto;
+      margin-top: 1rem;
+      gap: 1.2rem;
+      list-style: none;
+      div {
+        width: 3rem;
+        height: 3rem;
+        position: relative;
+        border-radius: 100%;
+        border: 1px solid black;
+        &.page-num-selected {
+          border: none;
+          background-color: lightgray;
+          width: 3.063rem;
+          height: 3.063rem;
+          position: relative;
+          span {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+          }
+        }
+      }
+      a {
+        width: 3rem;
+        height: 3rem;
+        position: relative;
+        border-radius: 100%;
+        border: 1px solid black;
+        text-decoration: none;
+        color: black;
+        transition: 0.6s;
+        &.first-elem {
+          margin-right: 1rem;
+        }
+        &.last-elem {
+          margin-left: 1rem;
+        }
+        span {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          font-size: 1.5rem;
+        }
+        &:hover {
+          background-color: lightgray;
+          border-color: lightgray;
+        }
+      }
+    }
+  }
+}

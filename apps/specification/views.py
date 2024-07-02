@@ -12,7 +12,6 @@ from django.db.models import Q
 
 class ProductAutocomplete(autocomplete.Select2QuerySetView):
     def get_result_value(self, result):
-   
         """Return the value of a result."""
         return str(result.pk)
 
@@ -60,7 +59,6 @@ class VendorAutocomplete(autocomplete.Select2QuerySetView):
 
 class PriceOneAutocomplete(autocomplete.Select2QuerySetView):
     def get_result_value(self, result):
-   
         """Return the value of a result."""
         return str(result.price_supplier)
 
