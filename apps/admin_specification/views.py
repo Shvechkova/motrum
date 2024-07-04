@@ -1,8 +1,10 @@
-from django.shortcuts import render
+from re import search
+from django.http import HttpResponse
+from django.shortcuts import redirect, render
 from apps.product.models import Product
 from django.core.paginator import Paginator
-
-# Create your views here.
+from .forms import SearchForm
+from django.db.models import Q
 
 
 def specifications(request):
@@ -18,12 +20,22 @@ def specifications(request):
         "historic_stock",
     ).all()
 
-    title = "Услуги"
+    if request.method == "GET":
+        form = SearchForm(request.GET)
+        if form.is_valid():
+            search_input = request.GET.get("search_input")
+            if request.GET.get("search_input") != None:
+                product_list = product_list.filter(
+                    Q(name__icontains=search_input)
+                    | Q(article__icontains=search_input)
+                    | Q(article_supplier__icontains=search_input)
+                    | Q(additional_article_supplier__icontains=search_input)
+                )
+    else:
+        form = SearchForm()
 
-    pagintation_list = []
-    for produt_item in product_list:
-        pagintation_list.append(produt_item)
-    paginator = Paginator(pagintation_list, 15)
+    title = "Услуги"
+    paginator = Paginator(product_list, 15)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
     num_of_pages = paginator.num_pages
@@ -31,5 +43,7 @@ def specifications(request):
         "title": title,
         "products": page_obj,
         "num_of_pages": num_of_pages,
+        "form": form,
+        "search_input": search_input,
     }
     return render(request, "admin_specification/specification_page.html", context)

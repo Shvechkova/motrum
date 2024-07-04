@@ -1,14 +1,78 @@
 .specification-content {
   padding: 1rem 0.938rem;
-  .head-title {
-    font-size: 2rem;
-    margin: 0;
-    padding: 0;
-  }
-  .specification-title {
-    color: brown;
-    font-size: 1.5rem;
-    margin-top: 1rem;
+  .head-content {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    .container {
+      width: 15%;
+      .specification-link-container {
+        font-size: 1.5rem;
+        a {
+          cursor: pointer;
+          color: brown;
+          text-decoration: none;
+          transition: 0.6s;
+          &:hover {
+            color: rgb(61, 17, 17);
+          }
+        }
+      }
+      .head-title {
+        font-size: 2rem;
+        margin: 0;
+        padding: 0;
+      }
+      .specification-title {
+        color: brown;
+        font-size: 1.5rem;
+        margin-top: 1rem;
+      }
+      .search-form-container {
+        margin: 1rem 0;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        .input-container {
+          display: flex;
+          flex-direction: column;
+          gap: 0.2rem;
+          .form-label {
+            font-size: 1rem;
+            cursor: pointer;
+            color: lightgray;
+          }
+          .form-input {
+            height: 1.5rem;
+            border: 1px solid black;
+            border-radius: 5px;
+            box-sizing: border-box;
+            padding: 0.4rem;
+            &:focus {
+              outline: none;
+            }
+          }
+        }
+        button {
+          width: 100%;
+          height: 1.5rem;
+          font-size: 1rem;
+          margin-top: 0.3rem;
+          cursor: pointer;
+          border-radius: 5px;
+          border: 1px solid black;
+          transition: 0.6s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          &:hover {
+            background-color: lightgray;
+            border-color: lightgray;
+          }
+        }
+      }
+    }
   }
   .spetification-product-catalog {
     display: flex;
@@ -47,35 +111,54 @@
           }
         }
       }
-      .quantity-buttons {
+      .item-buttons_container {
         display: flex;
-        align-items: flex-end;
-        position: relative;
-        button {
-          border-radius: 5px;
-          border: 0.125rem solid black;
-          font-size: 1.125rem;
-          width: 3rem;
-          cursor: pointer;
-          &:disabled,
-          &[disabled] {
-            cursor: auto;
+        flex-direction: column;
+        width: 10%;
+        gap: 1rem;
+        .quantity-buttons {
+          display: flex;
+          align-items: flex-end;
+          justify-content: space-between;
+          position: relative;
+          button {
+            border-radius: 5px;
+            border: 0.125rem solid black;
+            font-size: 1.125rem;
+            width: 3rem;
+            cursor: pointer;
+            &:disabled,
+            &[disabled] {
+              cursor: auto;
+            }
+            &.minus-button {
+              margin-right: 2rem;
+            }
+            &.plus-button {
+              margin-left: 2rem;
+            }
           }
-          &.minus-button {
-            margin-right: 2rem;
-          }
-          &.plus-button {
-            margin-left: 2rem;
+          span {
+            font-size: 2rem;
+            font-weight: bold;
+            position: absolute;
+            top: -19%;
+            left: 44.5%;
           }
         }
-        span {
-          font-size: 2rem;
-          font-weight: bold;
-          position: absolute;
-          top: -19%;
-          left: 44.5%;
+        .add-specification-button {
+          font-size: 0.8rem;
+          border-radius: 5px;
+          border: 1px solid black;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 1.5rem;
         }
       }
+    }
+    .none-products {
+      font-size: 2rem;
     }
     .pagintion {
       display: flex;
@@ -130,6 +213,28 @@
           background-color: lightgray;
           border-color: lightgray;
         }
+      }
+    }
+    .return-button {
+      width: 15%;
+      height: 1.5rem;
+      position: relative;
+      border-radius: 5px;
+      border: 1px solid black;
+      text-decoration: none;
+      background-color: buttonface;
+      transition: 0.6s;
+      span {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 1rem;
+        color: black;
+      }
+      &:hover {
+        background-color: lightgray;
+        border-color: lightgray;
       }
     }
   }
