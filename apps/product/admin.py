@@ -27,7 +27,7 @@ SIMPLE_HISTORY_EDIT = getattr(settings, "SIMPLE_HISTORY_EDIT", False)
 # from apps.product.forms import ProductForm
 from simple_history.manager import HistoricalQuerySet, HistoryManager
 from . import models
-from apps.product.forms import ProductChangeForm, ProductForm
+from apps.product.forms import ProductChangeForm, ProductDocumentAdminForm, ProductForm
 from apps.product.models import (
     CategoryProduct,
     GroupProduct,
@@ -52,11 +52,6 @@ from django import http
 from django.contrib.auth import get_permission_codename, get_user_model
 from django.utils.text import capfirst
 from django.utils.encoding import force_str
-
-
-
-
-
 
 
 class StockAdmin(SimpleHistoryAdmin):
@@ -332,7 +327,6 @@ class GroupProductAdmin(admin.ModelAdmin):
     list_display = ("name",)
 
 
-
 class PriceInline(admin.TabularInline):
     model = Price
     min_num = 1
@@ -362,6 +356,7 @@ class StockInline(admin.TabularInline):
         "lot_complect",
         "stock_supplier_unit",
         "stock_motrum",
+        "to_order",
     )
 
     readonly_fields = ["stock_supplier_unit"]
@@ -383,9 +378,7 @@ class ProductImageInline(admin.TabularInline):
 
     def preview(self, obj):
         print(obj.photo.url)
-        img = mark_safe(
-            '<img src="{}" height="100"  />'.format(obj.photo.url)
-        )
+        img = mark_safe('<img src="{}" height="100"  />'.format(obj.photo.url))
         return img
 
     def __init__(self, *args, **kwargs):
@@ -399,7 +392,9 @@ class ProductImageInline(admin.TabularInline):
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return ["preview",]
+            return [
+                "preview",
+            ]
         return [
             "preview",
         ]
@@ -421,6 +416,7 @@ class ProductDocumentInline(admin.TabularInline):
     model = ProductDocument
     fields = ("document", "type_doc", "hide")
     extra = 0
+    form = ProductDocumentAdminForm
 
     def __init__(self, *args, **kwargs):
         super(ProductDocumentInline, self).__init__(*args, **kwargs)
@@ -466,6 +462,7 @@ class ProductAdmin(SimpleHistoryAdmin):
         "supplier",
         "vendor",
         "name",
+        "пустые_поля",
     ]
 
     inlines = [
@@ -495,13 +492,65 @@ class ProductAdmin(SimpleHistoryAdmin):
         ),
     ]
 
-
     # def get_actions(self, request):
     #     actions = super().get_actions(request)
     #     if request.user.username[0].upper() != "J":
     #         if "delete_selected" in actions:
     #             del actions["delete_selected"]
     #     return actions
+    def пустые_поля(self, obj):
+        product_blank = ""
+
+        def get_blank(item, Model, product_blank):
+            product_blank_local = ""
+            for product_item in item:
+                product_blank_dict = {
+                    k: v for k, v in product_item.items() if v == None
+                }
+
+                for item_dict in product_blank_dict:
+                    verbose_name = Model._meta.get_field(item_dict).verbose_name
+                    item_one = f"<li font-size: 0.6rem>{verbose_name}</li>"
+                    product_blank_local = f"{product_blank_local}{item_one}"
+
+            product_blank = f"{product_blank}{product_blank_local}"
+            return product_blank
+
+        product = Product.objects.filter(id=obj.id).values()
+        product_blank_new = get_blank(product, Product, product_blank)
+
+        try:
+            price = Price.objects.get(prod=obj.id)
+        except Price.DoesNotExist:
+            item_one = f"<li>Цена</li>"
+            product_blank_new = f"{product_blank_new}{item_one}"
+
+        try:
+            stock = Stock.objects.get(prod=obj.id)
+        except Stock.DoesNotExist:
+            item_one = f"<li>Остаток</li>"
+            product_blank_new = f"{product_blank_new}{item_one}"
+
+  
+        props = ProductProperty.objects.filter(product=obj.id).exists()
+        if props == False:
+            item_one = f"<li>Характеристики</li>"
+            product_blank_new = f"{product_blank_new}{item_one}"
+
+
+        img = ProductImage.objects.filter(product=obj.id).exists()
+        if img == False:
+            item_one = f"<li>Изображения</li>"
+            product_blank_new = f"{product_blank_new}{item_one}"
+
+      
+        doc = ProductDocument.objects.filter(product=obj.id).exists()
+        if doc == False:
+            item_one = f"<li>Документы</li>"
+            product_blank_new = f"{product_blank_new}{item_one}"
+        
+       
+        return mark_safe("<ul    >{}</ul>".format(product_blank_new))
 
     def delete_queryset(self, request, queryset):
         for obj in queryset.all():
@@ -509,6 +558,47 @@ class ProductAdmin(SimpleHistoryAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
+            print(obj.autosave_tag)
+            if (
+                obj.category_supplier != None
+                and obj.group_supplier == None
+                and obj.category_supplier_all == None
+            ):
+                if obj.autosave_tag == True:
+                    return ["article_supplier", "supplier", "category_supplier"]
+                else:
+                    pass
+
+            elif (
+                obj.category_supplier != None
+                and obj.group_supplier != None
+                and obj.category_supplier_all == None
+            ):
+                if obj.autosave_tag == True:
+                    return [
+                        "article_supplier",
+                        "supplier",
+                        "category_supplier",
+                        "group_supplier",
+                    ]
+                else:
+                    pass
+
+            elif (
+                obj.category_supplier != None
+                and obj.group_supplier != None
+                and obj.category_supplier_all != None
+            ):
+                if obj.autosave_tag == True:
+                    return [
+                        "article_supplier",
+                        "supplier",
+                        "category_supplier",
+                        "group_supplier",
+                        "category_supplier_all",
+                    ]
+                else:
+                    pass
             return ["article_supplier", "supplier"]
         return [
             "",
@@ -516,6 +606,7 @@ class ProductAdmin(SimpleHistoryAdmin):
 
     def get_fieldsets(self, request, obj):
         fields = super(ProductAdmin, self).get_fieldsets(request, obj)
+
         fields_add = [
             (
                 "Основные параметры",
@@ -533,18 +624,45 @@ class ProductAdmin(SimpleHistoryAdmin):
                             "group_supplier",
                             "category_supplier_all",
                         ),
-                        ("category", "group"),
+                        # ("category", "group"),
                     ],
                 },
             ),
         ]
         if obj and obj.pk:
+            #     if obj.autosave_tag == False:
+            #         fields = [
+            #     (
+            #         "Основные параметры",
+            #         {
+            #             "fields": [
+            #                 (
+            #                     "article_supplier",
+            #                     "additional_article_supplier",
+            #                 ),
+            #                 "name",
+            #                 "description",
+            #                 ("supplier", "vendor"),
+            #                 (
+            #                     "category_supplier",
+            #                     "group_supplier",
+            #                     "category_supplier_all",
+            #                 ),
+            #                 # ("category", "group"),
+            #             ],
+            #         },
+            #     ),
+            # ]
+
             return fields
         else:
             return fields_add
 
     def has_add_permission(self, request):
+
         if request.path == "/admin/specification/specification/add/":
+            return False
+        if request.user.has_perm("product.change_product") == False:
             return False
         else:
             return True
@@ -565,8 +683,19 @@ class ProductAdmin(SimpleHistoryAdmin):
 
             if db_field.name == "vendor":
                 kwargs["queryset"] = Vendor.objects.filter(supplier_id=item.supplier.id)
-            if db_field.name == "category_supplier_all":
-                kwargs["queryset"] = SupplierCategoryProductAll.objects.filter(
+            # if db_field.name == "category_supplier_all":
+            #     kwargs["queryset"] = SupplierCategoryProductAll.objects.filter(
+            #         supplier_id=item.supplier.id, vendor_id=item.vendor.id
+            #     )
+        elif "/add/" in request.path:
+
+            for id_table in request.resolver_match.captured_kwargs.values():
+                parent_id = id_table
+
+            item = Product.objects.get(id=parent_id)
+
+            if db_field.name == "category":
+                kwargs["queryset"] = CategoryProduct.objects.filter(
                     supplier_id=item.supplier.id, vendor_id=item.vendor.id
                 )
 
@@ -574,6 +703,11 @@ class ProductAdmin(SimpleHistoryAdmin):
 
     def save_model(self, request, obj, form, change):
         obj._change_reason = "Ручное"
+        print(obj.pk)
+        if obj.pk:
+            pass
+        else:
+            obj.autosave_tag = False
         super().save_model(request, obj, form, change)
 
     def save_formset(self, request, form, formset, change):
@@ -581,6 +715,7 @@ class ProductAdmin(SimpleHistoryAdmin):
         for instance in instances:
             update_change_reason(instance, "Ручное")
             instance.save()
+
     # история изменений
     def history_view(self, request, object_id, extra_context=None):
         """The 'history' admin view for this model."""
@@ -724,37 +859,45 @@ class ProductAdmin(SimpleHistoryAdmin):
             request, self.object_history_template, context, **extra_kwargs
         )
 
+
 class LotAdmin(admin.ModelAdmin):
     fields = (
         "name",
         "name_shorts",
     )
 
+
 class GroupProductInline(admin.TabularInline):
     model = GroupProduct
-    fields = (
-        "name",
-    )
-    
-    
+    fields = ("name",)
 
 
 class CategoryProductAdmin(admin.ModelAdmin):
-    fields = ("name","get_name")
-    list_display = ['name', 'get_name', ]
+    fields = ("name",)
+    list_display = [
+        "name",
+        "get_name",
+    ]
+    # exclude = ["get_name"]
+
     inlines = [
         GroupProductInline,
     ]
-    
+
     def get_name(self, obj):
         group = GroupProduct.objects.filter(category=obj)
-        print(12313)
-        return group
+        item = ""
+        for gr in group:
+            item_one = f"<li>{gr.name}</li>"
+            item = f"{item}{item_one}"
+
+        return mark_safe("<ul>{}</ul>".format(item))
+
     # get_name.admin_order_field  = 'author'  #Allows column order sorting
     # get_name.short_description = 'Author Name'  #Renames column head
 
 
-admin.site.register(CategoryProduct,CategoryProductAdmin)
+admin.site.register(CategoryProduct, CategoryProductAdmin)
 admin.site.register(GroupProduct)
 
 admin.site.register(Product, ProductAdmin)

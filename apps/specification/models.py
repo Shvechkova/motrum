@@ -49,14 +49,10 @@ class Specification(models.Model):
     file = models.FileField(
         "фаил", upload_to=get_document_path, null=True, default=None
     )
-    tag_currency = models.ForeignKey(
-        Currency, on_delete=models.PROTECT, null=True, default=None
-    )
-    #  tag_currency = models.BinaryField("Валютная отметка",default=False)
-    # client = models.ForeignKey(
-    #     Client,
-    #     on_delete=models.PROTECT,
+    # tag_currency = models.ForeignKey(
+    #     Currency, on_delete=models.PROTECT, null=True, default=None
     # )
+    
 
     class Meta:
         verbose_name = "Спецификация"
@@ -64,7 +60,8 @@ class Specification(models.Model):
 
     def __str__(self):
         return f"{self.id_bitrix}"
-
+    # def save_specification_view_admin(self):
+    #     pass
 # @receiver(post_save)
 # def my_callback(sender, instance, *args, **kwargs):
 #     sums = ProductSpecification.objects.filter(specification=instance.id).aggregate(Sum("price_all"))
@@ -87,6 +84,13 @@ class ProductSpecification(models.Model):
         Product,
         verbose_name="Продукты",
         on_delete=models.PROTECT,
+    )
+    product_currency = models.ForeignKey(
+        Currency,
+        verbose_name="Валюта",
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
     )
 
     quantity = models.IntegerField(
@@ -111,19 +115,25 @@ class ProductSpecification(models.Model):
 
     
     def save(self, *args, **kwargs):
+        
 
         spec = Specification.objects.get(id=self.specification.id)
         price = Price.objects.get(prod=self.product)
-     
+        
+      
+        print("test test")
         if self.price_one != price.price_supplier:
             self.price_exclusive = True
         price_current = price.currency.words_code
+        self.product_currency = price.currency
         self.price_all = self.price_one * self.quantity
 
         # отметка о валютности + добавление общец суммы
+        print(price_current)
         if price_current != "RUB":
-            spec.tag_currency = True
-
+            # spec.tag_currency = price.currency
+            spec.currency_product = True
+        print(spec.total_amount)
         if spec.total_amount is None:
             total_init = 0
         else:

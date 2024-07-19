@@ -2,10 +2,11 @@ import datetime
 from urllib.request import urlopen
 import xml.etree.ElementTree as ET
 from xml.etree import ElementTree, ElementInclude
+from simple_history.utils import update_change_reason
 
 from apps.core.models import Currency
 from apps.product.models import CurrencyRate, Price
-from apps.specification.models import Specification
+from apps.specification.models import ProductSpecification, Specification
 from project.celery import app
 
 
@@ -31,7 +32,7 @@ def get_currency(self):
                 f".//Valute[CharCode='{current_world_code}']/VunitRate"
             )
             count = item.findtext(f".//Valute[CharCode='{current_world_code}']/Nominal")
-            print(value)
+            
             v = float(value.replace(",", "."))
             vi = float(vunit_rate.replace(",", "."))
 
@@ -44,12 +45,12 @@ def get_currency(self):
             currency_chek(current, now_rate[0])
 
     except Exception as exc:
-        self.retry(exc=exc, countdown=5)
+        self.retry(exc=exc, countdown=160)
 
 
 # удаление старых курсов
 def del_currency():
-    print(1231231)
+   
     now = datetime.datetime.now()
     three_days = datetime.timedelta(3)
     in_three_days = now - three_days
@@ -61,24 +62,35 @@ def del_currency():
 def update_currency_price(currency, current_world_code):
     products = Price.objects.filter(currency=currency)
     for product in products:
-        p = Price.objects.get(id=product.id)
-        p.save()
+        price = Price.objects.get(id=product.id)
+        price.save()
+        update_change_reason(price, "Автоматическое")        
 
 
 # проверка на увелисеие курса на 3% -если да отмерка спецификации не действительны
 def currency_chek(current, now_rate):
+
     old_rate = CurrencyRate.objects.filter(
         currency=current,
     ).earliest("date")
     old_rate_count = old_rate.vunit_rate
     new_rate_count = now_rate.vunit_rate
-    # print(new_rate_count)
     difference_count = old_rate_count - new_rate_count
 
     count_percent = old_rate_count / 100 * 3
-    # print(difference_count)
-    # print(count_percent)
+    print(difference_count)
+    print(count_percent)
     if difference_count > count_percent:
-        specification = Specification.objects.filter(
-            tag_stop=True, tag_currency_id=now_rate.currency.id
-        ).update(tag_stop=False)
+       
+        try:
+            product_specification = ProductSpecification.objects.filter(product_currency=now_rate.currency, specification__tag_stop=True).values('specification')
+            for prod in product_specification:
+                specification = Specification.objects.get(
+                tag_stop=True, id=prod["specification"]
+            )
+                specification.tag_stop = False
+                specification.save()
+                # update_change_reason(specification, "Автоматическое") 
+                  
+        except  ProductSpecification.DoesNotExist:
+            pass

@@ -12,6 +12,8 @@ class SearchForm(forms.Form):
         widget=forms.TextInput(
             attrs={
                 "class": "form-input",
+                "autocomplete": "off",
+                "placeholder": "Ведеите наименование или артикул",
             }
         ),
         required=False,

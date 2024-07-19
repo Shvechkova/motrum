@@ -2,6 +2,7 @@ from email.policy import default
 
 import os
 from pyexpat import model
+from django.urls import reverse
 from django.utils import timezone
 from django.db import models
 from simple_history import register
@@ -22,6 +23,7 @@ from simple_history.models import (
     to_historic,
 )
 
+
 from django.dispatch import receiver
 from django.db.models import signals, Sum, Q
 
@@ -30,6 +32,7 @@ from apps.core.utils import (
     get_file_path,
     get_file_path_add,
     get_lot,
+    get_motrum_category,
     get_price_motrum,
     get_price_supplier_rub,
 )
@@ -116,6 +119,7 @@ class Product(models.Model):
         blank=True,
         null=True,
     )
+
     group = models.ForeignKey(
         "GroupProduct",
         verbose_name="Группа Мотрум",
@@ -123,17 +127,19 @@ class Product(models.Model):
         blank=True,
         null=True,
     )
+
     description = models.CharField(
-        "Описание товара", max_length=1000, blank=True, null=True
+        "Описание товара", max_length=2000, blank=True, null=True
     )
 
-    name = models.CharField("Название товара", max_length=350)
+    name = models.CharField("Название товара", max_length=600)
     check_image_upgrade = models.BooleanField("было изменено вручную", default=False)
     check_document_upgrade = models.BooleanField("было изменено вручную", default=False)
     check_property_upgrade = models.BooleanField("было изменено вручную", default=False)
     data_create = models.DateField(default=timezone.now, verbose_name="Дата добавления")
 
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
+    autosave_tag = models.BooleanField("автоматическая загрузка", default=True)
 
     class Meta:
         verbose_name = "Товар"
@@ -143,11 +149,19 @@ class Product(models.Model):
         return f"Арт.мотрум: {self.article} | Арт.поставщика: {self.article_supplier} | Название товара: {self.name}"
 
     def save(self, *args, **kwargs):
+        print(1231231)
         if self.article == "":
 
             article = create_article_motrum(self.supplier.id)
 
             self.article = article
+
+        filter_catalog = get_motrum_category(self)
+        print(filter_catalog)
+        if self.category == None:
+            self.category = filter_catalog[0]
+        if self.category == None:
+            self.group = filter_catalog[1]
 
         super().save(*args, **kwargs)
         # обновление цен товаров
@@ -183,8 +197,6 @@ class CategoryProduct(models.Model):
 
     def __str__(self):
         return self.name
-
-
 
 
 class GroupProduct(models.Model):
@@ -225,7 +237,7 @@ class Price(models.Model):
         Vat,
         verbose_name="НДС",
         on_delete=models.PROTECT,
-        blank=True,
+        # blank=True,
         null=True,
     )
 
@@ -233,7 +245,7 @@ class Price(models.Model):
 
     price_supplier = models.FloatField(
         "Цена в каталоге поставщика в валюте каталога",
-        blank=True,
+        # blank=True,
         null=True,
     )
 
@@ -267,7 +279,7 @@ class Price(models.Model):
         return f"Цена поставщика:{self.rub_price_supplier} ₽ Цена мотрум: {self.price_motrum} ₽"
 
     def save(self, *args, **kwargs):
-   
+
         if self.price_supplier == 0 or self.extra_price == True:
             self.extra_price = True
             self.price_supplier = 0
@@ -275,7 +287,7 @@ class Price(models.Model):
             self.price_motrum = 0
         # elif self.price_supplier is not None:
         elif self.price_supplier != 0:
-         
+
             self.extra_price == False
 
             rub_price_supplier = get_price_supplier_rub(
@@ -288,8 +300,7 @@ class Price(models.Model):
             self.rub_price_supplier = rub_price_supplier
             print(self.prod.category_supplier_all)
             print(self.prod.group_supplier)
-           
-      
+
             price_motrum_all = get_price_motrum(
                 self.prod.category_supplier,
                 self.prod.group_supplier,
@@ -301,9 +312,10 @@ class Price(models.Model):
             )
             price_motrum = price_motrum_all[0]
             sale = price_motrum_all[1]
-    
+
             self.price_motrum = price_motrum
             self.sale = sale
+            print(sale)
 
         super().save(*args, **kwargs)
 
@@ -344,6 +356,8 @@ class Stock(models.Model):
         "Остаток на складе поставщика в штуках"
     )
     stock_motrum = models.PositiveIntegerField("Остаток на складе Motrum в штуках")
+
+    to_order = models.BooleanField("Товар под заказ", default=False)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
 
     class Meta:
@@ -359,7 +373,7 @@ class Stock(models.Model):
 
         self.stock_supplier_unit = lots[1]
         self.lot_complect = lots[2]
-
+        print(lots)
         name1 = super().save(*args, **kwargs)
 
 
@@ -403,9 +417,9 @@ class ProductImage(models.Model):
 
     # def __str__(self):
     #     return None
-        # return mark_safe(
-        #     '<img src="{}{}" height="200" width="200" />'.format(MEDIA_URL, self.photo)
-        # )
+    # return mark_safe(
+    #     '<img src="{}{}" height="200" width="200" />'.format(MEDIA_URL, self.photo)
+    # )
 
     # def delete(self, *args, **kwargs):
     #     self.hide = True

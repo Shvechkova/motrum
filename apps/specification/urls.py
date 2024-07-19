@@ -11,6 +11,7 @@ from apps.specification.views import (
     ProductAutocomplete,
     PriceOneAutocomplete,
     VendorAutocomplete,
+ 
 )
 
 app_name = "specification"
@@ -28,11 +29,8 @@ urlpatterns = [
     ),
     url(
         r"^price-one-autocomplete/$",
-        PriceOneAutocomplete.as_view(
-            model=ProductSpecification,
-            create_field="price_one",
-            validate_create=True,
-        ),
+        PriceOneAutocomplete.as_view( model=ProductSpecification,create_field='price_one', validate_create=True,),
         name="price-one-autocomplete",
     ),
+   
 ]

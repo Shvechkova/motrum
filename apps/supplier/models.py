@@ -5,9 +5,18 @@ import requests
 import json
 from django.utils.text import slugify
 from pytils import translit
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+import threading
+from simple_history.utils import update_change_reason
+
 
 
 from apps.core.models import Currency, Vat
+from apps.core.utils import get_file_price_path_add
+
+
+
 # from apps.core.utils import get_file_path_add
 
 
@@ -18,9 +27,13 @@ from apps.core.models import Currency, Vat
 
 
 class Supplier(models.Model):
+    
     name = models.CharField("Название поставщика", max_length=40)
-    # integration_type (тип интеграции)
     slug = models.SlugField(null=True)
+    file = models.FileField(
+        "Архив с прайсами", upload_to=get_file_price_path_add, max_length=255, null=True
+    )
+    
 
     class Meta:
         verbose_name = "Поставщик"
@@ -35,8 +48,9 @@ class Supplier(models.Model):
         slug_text = self.name
         slugish = translit.translify(slug_text)
         self.slug = slugify(slugish)
-
+        print(self.file)
         super().save(*args, **kwargs)
+
 
 
 
@@ -87,6 +101,8 @@ class Vendor(models.Model):
 
 class SupplierCategoryProduct(models.Model):
     name = models.CharField("Название категории", max_length=150)
+    slug = models.CharField("слаг", max_length=150,blank=True,
+        null=True,)
     supplier = models.ForeignKey(
         Supplier,
         verbose_name="Поставщик",
@@ -107,6 +123,23 @@ class SupplierCategoryProduct(models.Model):
         blank=True,
         null=True,
     )
+    category_catalog = models.ForeignKey(
+        "product.CategoryProduct",
+        verbose_name="Категория каталога мотрум",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
+
+    group_catalog = models.ForeignKey(
+        "product.GroupProduct",
+        verbose_name="Группа каталога мотрум",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
+    autosave_tag = models.BooleanField("автоматическая загрузка", default=True)
+
 
     class Meta:
         verbose_name = "Категория товара у поставщика"
@@ -114,7 +147,26 @@ class SupplierCategoryProduct(models.Model):
 
     def __str__(self):
         return f"{self.article_name}{self.name}"
+    
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        from apps.product.models import Product
+        # обноыление категорий связанных продуктоы
+        product = Product.objects.filter(group_supplier=self.id)
+        
+        def background_task():
+            # Долгосрочная фоновая задача
+            for product_one in product:
+                product_one.category = self.category_catalog
+                if self.group_catalog:
+                    product_one.group = self.group_catalog
+                    
+                product_one.save()
+                update_change_reason(product_one, "Автоматическое")
 
+        daemon_thread = threading.Thread(target=background_task)
+        daemon_thread.setDaemon(True)
+        daemon_thread.start()
     
 
 class SupplierGroupProduct(models.Model):
@@ -147,13 +199,58 @@ class SupplierGroupProduct(models.Model):
         verbose_name="категория",
         on_delete=models.PROTECT,
     )
+    category_catalog = models.ForeignKey(
+        "product.CategoryProduct",
+        verbose_name="Категория каталога мотрум",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
+    
+    group_catalog = models.ForeignKey(
+        "product.GroupProduct",
+        verbose_name="Группа каталога мотрум",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
 
+    autosave_tag = models.BooleanField("автоматическая загрузка", default=True)
     class Meta:
         verbose_name = "Группа товара у поставщика"
         verbose_name_plural = "Группы товаров у поставщика"
 
     def __str__(self):
         return self.name
+    
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        from apps.product.models import Product
+        # обноыление категорий связанных продуктоы
+        product = Product.objects.filter(group_supplier=self.id)
+        
+        def background_task():
+            # Долгосрочная фоновая задача
+            for product_one in product:
+                product_one.category = self.category_catalog
+                if self.group_catalog:
+                    product_one.group = self.group_catalog
+                    print(product_one)
+                   
+                product_one.save()
+                update_change_reason(product_one, "Автоматическое")
+            
+
+        daemon_thread = threading.Thread(target=background_task)
+        daemon_thread.setDaemon(True)
+        daemon_thread.start()
+        
+        # for product_one in product:
+        #     product_one.category = self.category_catalog
+        #     if self.group_catalog:
+        #         product_one.group = self.group_catalog
+                
+        #     product_one.save()
 
 
 class SupplierCategoryProductAll(models.Model):
@@ -209,6 +306,7 @@ class SupplierCategoryProductAll(models.Model):
         blank=True,
         null=True,
     )
+    autosave_tag = models.BooleanField("автоматическая загрузка", default=True)
 
 
     class Meta:
@@ -220,18 +318,33 @@ class SupplierCategoryProductAll(models.Model):
         return f"{self.name} {self.article_name}| Поставщик:{self.supplier} Вендор:{self.vendor}"
 # {self.article_name}| Поставщик:{self.supplier} Вендор:{self.vendor}
     def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)         
-        from apps.product.models import Price
+        super().save(*args, **kwargs)
         from apps.product.models import Product
-        from apps.core.utils import get_category
-        # обновление цен товаров связанной группы
-        price = Price.objects.filter(prod__category_supplier_all=self.id)
-        for price_one in price:
-            price_one.price_supplier = price_one.price_supplier
-            price_one.save()
-           
+        # обоновление категорйи связанных продуктов
+        product = Product.objects.filter(category_supplier_all=self.id)
+        def background_task():
+            # Долгосрочная фоновая задача
+            for product_one in product:
+                product_one.category = self.category_catalog
+                if self.group_catalog:
+                    product_one.group = self.group_catalog
+                    # update_change_reason(product_one, "Автоматическое")
+                product_one.save()
+                update_change_reason(product_one, "Автоматическое")
             
-       
+
+        daemon_thread = threading.Thread(target=background_task)
+        daemon_thread.setDaemon(True)
+        daemon_thread.start()
+        
+        # for product_one in product:
+        #     product_one.category = self.category_catalog
+        #     if self.group_catalog:
+        #         product_one.group = self.group_catalog
+                
+        #     product_one.save()
+            
+ 
        
 
 
@@ -293,7 +406,17 @@ class Discount(models.Model):
         verbose_name_plural = "Скидки"
         
     def __str__(self):
-        return f"Скидка {self.vendor}|{self.vendor}:{self.percent}%"
+        name = ""
+        if self.category_supplier_all:
+            name = self.category_supplier_all.name
+        elif  self.group_supplier:
+            name = self.group_supplier.name
+        elif  self.category_supplier:
+            name = self.category_supplier.name
+        elif  self.vendor:
+            name = self.vendor.name
+       
+        return f"Скидка {self.supplier}|{name}:{self.percent}%"
 
     
     def save(self, *args, **kwargs):
@@ -301,7 +424,6 @@ class Discount(models.Model):
         from apps.product.models import Price
         # обновление цен товаров связанной группы
         if self.category_supplier_all:
-            print(11111)
             price = Price.objects.filter(prod__category_supplier_all=self.category_supplier_all)
         elif  self.group_supplier:
             price = Price.objects.filter(prod__group_supplier=self.group_supplier)
@@ -312,8 +434,14 @@ class Discount(models.Model):
         elif  self.supplier:
             price = Price.objects.filter(prod__supplier=self.supplier)              
         
-        print(price)  
-        for price_one in price:
-            # price_one.price_supplier = price_one.price_supplier
-            price_one.save()
+       
+        def background_task():
+            # Долгосрочная фоновая задача
+            for price_one in price:
+                price_one.save()
+                update_change_reason(price_one, "Автоматическое")
             
+
+        daemon_thread = threading.Thread(target=background_task)
+        daemon_thread.setDaemon(True)
+        daemon_thread.start()
