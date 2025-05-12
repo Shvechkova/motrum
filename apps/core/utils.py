@@ -24,6 +24,8 @@ from apps.logs.utils import error_alert
 from requests.auth import HTTPBasicAuth
 
 
+
+
 from apps.specification.utils import crete_pdf_specification
 
 
@@ -1399,9 +1401,16 @@ def save_new_product_okt(product_new):
     if product_new.product:
         product_new_prod = product_new.product.id
         product = Product.objects.get(id=product_new_prod)
+        # product.name = product_new.product_new
+        prod_cart = product_new.id_cart
+        if prod_cart.product != product:
+        
+            prod_cart.product = product
+            prod_cart.product_price = product_new.price_one_original_new 
+            prod_cart.product_sale_motrum = product_new.sale_motrum 
+            prod_cart.sale_client = product_new.extra_discount 
 
-        product.name = product_new.product_new
-
+        prod_cart.save()
         product.save()
 
     else:
@@ -1438,6 +1447,13 @@ def save_new_product_okt(product_new):
         product_stock.save()
 
         product_new.product = product
+        prod_cart = product_new.id_cart
+        prod_cart.product = product
+        prod_cart.product_price = product_new.price_one_original_new 
+        prod_cart.product_sale_motrum = product_new.sale_motrum 
+        prod_cart.sale_client = product_new.extra_discount 
+
+        prod_cart.save()
         product_new.save()
 
     return product
@@ -2538,6 +2554,38 @@ def serch_products_web(search_text, queryset):
     print("queryset", queryset)
     return queryset
 
+
+def check_delite_product_cart_in_upd_spes(specification,cart):
+    from apps.product.models import ProductCart
+    from apps.specification.models import ProductSpecification
+    
+    cart_prod = ProductCart.objects.filter(cart=cart).values_list("id")
+    spes_prod = ProductSpecification.objects.filter(specification=specification,id_cart__in=cart_prod)
+    print(spes_prod)
+    
+    print("cart_prod",cart_prod)
+    for spes_prod_item in spes_prod:
+        p = ProductCart(cart=spes_prod_item.specification.cart,
+                        product=spes_prod_item.product,
+                        product_price = spes_prod_item.price_one,
+                        product_price_motrum = spes_prod_item.price_one_motrum,
+                        product_sale_motrum= spes_prod_item.sale_motrum,
+                        sale_client=spes_prod_item.extra_discount,
+                        vendor=spes_prod_item.vendor,
+                        supplier =spes_prod_item.supplier,
+                        product_new=spes_prod_item.product_new,
+                        product_new_article=spes_prod_item.product_new_article,
+                        product_new_price=spes_prod_item.price_one_original_new,
+                        product_new_sale=spes_prod_item.extra_discount,
+                        product_new_sale_motrum=spes_prod_item.sale_motrum,
+                        quantity=spes_prod_item.quantity,
+                        comment=spes_prod_item.comment,
+                        date_delivery=spes_prod_item.date_shipment,
+                        )
+        print(p)
+        p._change_reason = "Автоматическое"
+        p.save()
+    
 
 def create_file_props_in_vendor_props():
     from apps.product.models import (

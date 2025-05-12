@@ -892,6 +892,12 @@ class ProductCart(models.Model):
         null=True,
         default=None,
     )
+    product_price_motrum = models.FloatField(
+        "Цена товара",
+        blank=True,
+        null=True,
+        default=None,
+    )
     product_sale_motrum = models.FloatField(
         "Скидка мотрум товара ",
         blank=True,
@@ -964,6 +970,7 @@ class ProductCart(models.Model):
         blank=True,
         null=True,
     )
+    date_delivery = models.DateField(verbose_name="Дата поставки товара", null=True)
     tag_auto_document = models.CharField(max_length=100, choices=TAG_DOC, default="-")
 
     class Meta:

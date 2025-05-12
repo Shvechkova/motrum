@@ -8,6 +8,7 @@ import random
 import re
 from itertools import chain
 import traceback
+import unicodedata
 from xmlrpc.client import boolean
 from django.conf import settings
 from django.db.models import Prefetch
@@ -78,6 +79,7 @@ from apps.client.models import (
 )
 from apps.core.utils import (
     after_save_order_products,
+    check_delite_product_cart_in_upd_spes,
     client_info_bitrix,
     create_info_request_order_1c,
     create_info_request_order_bitrix,
@@ -813,6 +815,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             data = request.data
             id_bitrix = request.COOKIES.get("bitrix_id_order")
             s = data["serializer"]
+            s = unicodedata.normalize('NFKD', s)
             json_acceptable_string = s.replace('"', "").replace("'", '"')
             d = json.loads(json_acceptable_string)
 
@@ -919,6 +922,7 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         if specification:
             try:
+                product_cart = ProductCart.objects.filter(cart=cart).update(date_delivery=None)
                 data_order = {
                     "comment": data["comment"],
                     "name": id_bitrix,
@@ -1144,16 +1148,16 @@ class OrderViewSet(viewsets.ModelViewSet):
                 type_save = request.COOKIES.get("type_save")
 
                 if IS_TESTING or user.username == "testadmin":
-
-                    json_data = json.dumps(data_for_1c)
-                    print("json_data", json_data)
-                    if user.username == "testadmin":
-                        print("if IS_TESTING or user.username == testadmin")
-                        url = "https://dev.bmgspb.ru/grigorev_unf_m/hs/rest/order"
-                        headers = {"Content-type": "application/json"}
-                        response = send_requests(url, headers, json_data, "1c")
-                        print(response)
                     pass
+                    # json_data = json.dumps(data_for_1c)
+                    # print("json_data", json_data)
+                    # if user.username == "testadmin":
+                    #     print("if IS_TESTING or user.username == testadmin")
+                    #     url = "https://dev.bmgspb.ru/grigorev_unf_m/hs/rest/order"
+                    #     headers = {"Content-type": "application/json"}
+                    #     response = send_requests(url, headers, json_data, "1c")
+                    #     print(response)
+                    # pass
                 else:
                     json_data = json.dumps(data_for_1c)
                     url = "https://dev.bmgspb.ru/grigorev_unf_m/hs/rest/order"
@@ -1217,7 +1221,11 @@ class OrderViewSet(viewsets.ModelViewSet):
     )
     def exit_order_admin(self, request, *args, **kwargs):
         cart_id = request.COOKIES.get("cart")
+        # specification = request.COOKIES.get("specificationId")
         cart = Cart.objects.filter(id=cart_id).update(is_active=True)
+        # if specification and specification != 0 and specification != "":
+        #     check_delite_product_cart_in_upd_spes(specification,cart)
+        
         return Response(cart, status=status.HTTP_200_OK)
 
     # ОКТ получить список товаров для создания счета с датами псотавки 

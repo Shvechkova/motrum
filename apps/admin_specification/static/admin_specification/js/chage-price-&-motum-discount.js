@@ -14,8 +14,17 @@ window.addEventListener("DOMContentLoaded", () => {
       const priceInput = productItem.querySelector(".price-input");
       const saveBtn = productItem.querySelector(".save_icon_container");
       const priceContainer = productItem.querySelector(".price_once");
+      const deliveryDate = productItem.querySelector(".delivery_date")
+      const discountInput = productItem.querySelector(".discount-input")
       const motrumSaleContainer = productItem.querySelector(
         ".motrum_sale_persent"
+      );
+      const motrumPriceContainer = productItem.querySelector(".price_motrum");
+      const changeMotrumPriceInput= productItem.querySelector(
+        ".change_price_motrum"
+      );
+      const changeMotrumPriceLable= productItem.querySelector(
+        ".change_price_motrum_label"
       );
       const changePriceInput = productItem.querySelector(".change_input_price");
       const changeMotrumSaleInput = productItem.querySelector(
@@ -28,12 +37,25 @@ window.addEventListener("DOMContentLoaded", () => {
       changeBtn.onclick = () => {
         changeBtn.style.display = "none";
         saveBtn.classList.add("show");
+        deliveryDate.removeAttribute("disabled");
+        discountInput.removeAttribute("disabled");
         if (changePriceInput) {
+
           changePriceInput.value = getReplacedInputValue(changePriceInput);
           priceContainer.style.display = "none";
           changePriceInput.classList.add("show");
           inputLogic(changePriceInput);
         }
+        if (changeMotrumPriceInput) {
+            changeMotrumPriceInput.value = getReplacedInputValue(changeMotrumPriceInput);
+          
+          
+          // motrumPriceContainer.style.display = "none";
+          changeMotrumPriceInput.classList.add("show");
+          changeMotrumPriceLable.classList.add("show");
+          inputLogic(changeMotrumPriceInput);
+        }
+        
         changeMotrumSaleInput.value = getReplacedInputValue(
           changeMotrumSaleInput
         );
@@ -50,7 +72,8 @@ window.addEventListener("DOMContentLoaded", () => {
       saveBtn.onclick = () => {
         const cartId = getCookie("cart");
         const csrfToken = getCookie("csrftoken");
-
+        const deliveryDate = productItem.querySelector(".delivery_date").value
+        if(changePriceInput.value){
         const dataObj = {
           product: productId,
           product_price: changePriceInput
@@ -58,6 +81,9 @@ window.addEventListener("DOMContentLoaded", () => {
             : priceInput.value,
           cart: cartId,
           product_sale_motrum: changeMotrumSaleInput.value,
+          date_delivery:deliveryDate,
+          sale_client: discountInput.value,
+          product_price_motrum:changeMotrumPriceInput.value
         };
         const data = JSON.stringify(dataObj);
 
@@ -76,6 +102,9 @@ window.addEventListener("DOMContentLoaded", () => {
             throw new Error("Ошибка");
           }
         });
+      }else{
+        changePriceInput.style.border = "1px solid red";
+      }
       };
     });
   }
