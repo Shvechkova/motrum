@@ -27,6 +27,7 @@
                     <div class="title_item">Срок поставки</div>
                 </div>
                 {% for item in product %}
+                {{item.position_in_cart}}
                     <div class="item_container data-base-product-container"
                          data-vendor=""
                          data-supplier=""
@@ -227,10 +228,10 @@
                             </label>
                         </div>
                         <div class="item_value">
-                            <input class="discount-input"
+                            <input class="counter_input_doc"
                                    type="number"
                                    name="spesif-input-counter"
-                                   
+                                   value="{{ item.position_in_cart }}"
                                    maxlength="6"
                                    />
                         </div>
@@ -238,6 +239,8 @@
                 {% endfor %}
                 <!--товары без записи в бд уже есть в спецификации или нет-->
                 {% for item in product_new %}
+                111
+                {{item.position_in_cart}}
                     {% if update_spesif %}
                         <!--когда аптейдейт-->
                         <div class="item_container added_item_container"
@@ -387,6 +390,14 @@
                                     {% endif %}
                                 </label>
                             </div>
+                            <div class="item_value">
+                            <input class="counter_input_doc"
+                                   type="number"
+                                   name="spesif-input-counter"
+                                   value="{{ item.position_in_cart }}"
+                                   maxlength="6"
+                                   />
+                        </div>
                             <div class="change_item_container_wrapper">
                        
                                 <div class="change_item_container">
@@ -604,6 +615,14 @@
                                     {% endif %}
                                 </label>
                             </div>
+                            <div class="item_value">
+                            <input class="counter_input_doc"
+                                   type="number"
+                                   name="spesif-input-counter"
+                                   value="{{ item.position_in_cart }}"
+                                   maxlength="6"
+                                   />
+                        </div>
                             <div class="change_item_container_wrapper">
                                 <div class="change_item_container">
                                     <div class="change_item_container_value">
@@ -689,6 +708,8 @@
                 {% endfor %}
                 <!--товары без записи в бд при аплдете добавленные новые которых еще нет в спецификации-->
                 {% for item in product_new_more %}
+                22
+                {{item.position_in_cart}}
                     {% if update_spesif %}
                         <div class="item_container added_item_container"
                              data-vendor="{{ item.vendor.id }}"
@@ -821,6 +842,14 @@
                                     {% endif %}
                                 </label>
                             </div>
+                            <div class="item_value">
+                            <input class="counter_input_doc"
+                                   type="number"
+                                   name="spesif-input-counter"
+                                   value="{{ item.position_in_cart }}"
+                                   maxlength="6"
+                                   />
+                        </div>
                             <div class="change_item_container_wrapper">
                                 <div class="change_item_container">
                                     <div class="change_item_container_value">

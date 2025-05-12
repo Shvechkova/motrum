@@ -246,7 +246,11 @@ class ProductSpecification(models.Model):
         null=True,
     )
     date_shipment = models.DateField(verbose_name="Дата поставки товара", null=True)
-    
+    order_priority = models.IntegerField(
+        "Очередность заказа",
+        blank=True,
+        null=True,
+    )
     
     
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))

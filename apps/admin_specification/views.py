@@ -37,8 +37,9 @@ from apps.supplier.models import Supplier
 from apps.user.models import AdminUser
 from project.settings import MEDIA_ROOT
 from .forms import SearchForm
-from django.db.models import Q, F, OrderBy, Case, When, Value
-from django.db.models.functions import Replace
+from django.db.models import Q, F, OrderBy, Case, When, Value, IntegerField, Subquery, OuterRef
+from django.db.models.functions import Replace, RowNumber
+from django.db.models.expressions import Window
 
 from django.db.models.functions import Coalesce
 from django.db.models.functions import Round
@@ -479,14 +480,22 @@ def create_specification(request):
         print("cart_qs",cart_qs)
         if cart_qs.client:
             discount_client = Client.objects.filter(id=cart_qs.client.id)
-
+        
         product_cart_list = ProductCart.objects.filter(
             cart=cart, product__isnull=False
-        ).values_list("product__id")
-
+        ).order_by("id").values_list("product__id")
+        print(product_cart_list)
         product_cart_prod = ProductCart.objects.filter(cart=cart, product__isnull=False)
-        product_cart = ProductCart.objects.filter(cart=cart)
+        product_cart = ProductCart.objects.filter(cart=cart).order_by("id").annotate(
+            position_in_cart=Case(
+                *[When(id=id, then=Value(i)) for i, id in enumerate(ProductCart.objects.filter(cart=cart).order_by("id").values_list('id', flat=True), 1)],
+                default=Value(0),
+                output_field=IntegerField(),
+            ))
 
+        for pr in product_cart:
+            print(pr.position_in_cart)
+            print(pr.id)
         # изменение спецификации
         if type_save_cookee != "new":
             # try:
@@ -518,6 +527,9 @@ def create_specification(request):
                     product_new_article__isnull=False,
                 )
                 .annotate(
+                    position_in_cart=product_cart.filter(id=OuterRef("id_cart")).values(
+                        "position_in_cart",
+                    ),
                     id_product_spesif=F("id"),
                     product_new_cart_vendor=product_cart.filter(
                         id=OuterRef("id_cart")
@@ -571,7 +583,7 @@ def create_specification(request):
                         ),
                     ),
                 )
-                .order_by("id_product_cart")
+                .order_by("position_in_cart")
             )
             product_new_value_id = product_new.values_list("id_product_cart")
 
@@ -584,6 +596,9 @@ def create_specification(request):
                 )
                 .exclude(id__in=product_new_value_id)
                 .annotate(
+                    position_in_cart=product_cart.filter(id=OuterRef("id")).values(
+                        "position_in_cart",
+                    ),
                     price_motrum=Case(
                         When(
                             product_new_sale_motrum=None,
@@ -618,6 +633,9 @@ def create_specification(request):
                 product_new = (
                     ProductCart.objects.filter(cart=cart, product=None)
                     .annotate(
+                        position_in_cart=product_cart.filter(id=OuterRef("id")).values(
+                        "position_in_cart",
+                    ),
                         price_motrum=Case(
                             When(
                                 product_new_sale_motrum=None,
@@ -687,6 +705,9 @@ def create_specification(request):
                 product_new = (
                     ProductCart.objects.filter(cart=cart, product=None)
                     .annotate(
+                        position_in_cart=product_cart.filter(id=OuterRef("id")).values(
+                        "position_in_cart",
+                    ),
                         price_motrum=Case(
                             When(
                                 product_new_sale_motrum=None,
@@ -728,7 +749,6 @@ def create_specification(request):
                 "category_supplier_all",
                 "group_supplier",
                 "category_supplier",
-                # "stock__lot",
             )
             .prefetch_related(
                 Prefetch("stock__lot"),
@@ -736,6 +756,9 @@ def create_specification(request):
                 Prefetch("price__sale"),
             )
             .annotate(
+                position_in_cart=product_cart.filter(product=OuterRef("pk")).values(
+                        "position_in_cart",
+                    ),
                 quantity=product_cart_prod.filter(product=OuterRef("pk")).values(
                     "quantity",
                 ),
@@ -822,12 +845,8 @@ def create_specification(request):
                 sale_client=product_cart_prod.filter(product=OuterRef("pk")).values(
                     "sale_client",
                 ),
-                # price_motrum_okt = Round(
-                #             F("price_cart") - (F("price_cart")/100 * F("sale_motrum")),
-                #             2,
-                #         ),
             )
-            # .order_by("id_product_cart")
+            .order_by("id_product_cart")
         )
 
     # корзины нет
