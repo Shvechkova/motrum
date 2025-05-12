@@ -967,7 +967,7 @@ def save_specification(
     date_delivery_all = received_data["date_delivery"]
     products = received_data["products"]
     id_cart = received_data["id_cart"]
-
+   
     # первичное создание/взятие спецификации
     try:
         specification = Specification.objects.get(id=id_specification)
@@ -1143,11 +1143,16 @@ def save_specification(
                     date_delivery, "%Y-%m-%d"
                 )
                 product_spes.date_delivery = date_delivery
-
+        
             text_delivery = product_item["text_delivery"]
             if text_delivery != "" and text_delivery != None:
                 product_spes.text_delivery = text_delivery
 
+            item_comm = product_item["comment"]
+            if item_comm != "" and item_comm != None:
+                product_spes.text_delivery = item_comm
+                
+                
             product_spes.save()
 
             total_amount = total_amount + price_all
