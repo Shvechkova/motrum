@@ -50,6 +50,8 @@ window.addEventListener("DOMContentLoaded", () => {
       const changeMotrumPriceInput= changeFormWrapper.querySelector(
         ".new_item_change_price_motrum"
       );
+      const counterInput = changeFormWrapper.querySelector(".counter-item-bill")
+
       changeMotrumPriceInput.value = getCurrentPrice(changeMotrumPriceInput.value);
 
       changeMotrumPriceInput.addEventListener("input", function () {
@@ -207,7 +209,8 @@ window.addEventListener("DOMContentLoaded", () => {
             vendor: supplierSelect.getAttribute("value"),
             date_delivery:deliveryDate.value,
             sale_client: discountInput.value,
-            product_price_motrum:changeMotrumPriceInput.value
+            product_price_motrum:changeMotrumPriceInput.value,
+            order_priority: counterInput.value,
           };
           const data = JSON.stringify(objData);
           fetch(`/api/v1/cart/${productId}/upd-product-new/`, {

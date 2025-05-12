@@ -488,6 +488,10 @@ def create_specification(request):
         product_cart_prod = ProductCart.objects.filter(cart=cart, product__isnull=False)
         product_cart = ProductCart.objects.filter(cart=cart).order_by("id").annotate(
             position_in_cart=Case(
+                When(
+                            order_priority__isnull=False,
+                            then=("order_priority"),
+                        ),
                 *[When(id=id, then=Value(i)) for i, id in enumerate(ProductCart.objects.filter(cart=cart).order_by("id").values_list('id', flat=True), 1)],
                 default=Value(0),
                 output_field=IntegerField(),

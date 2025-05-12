@@ -38,16 +38,18 @@ class Notification(models.Model):
     def add_notification(order,type_notification,file):
         # request = RequestMiddleware(get_response=None)
         # request = request.thread_local.current_request
-
-        order = Order.objects.get(id=order)
-        client = order.client
-        if client:
-            Notification.objects.create(
-                order=order,
-                client=client,
-                file=file,
-                type_notification=type_notification,
-            )
+        if IS_TESTING:
+            pass
+        else:
+            order = Order.objects.get(id=order)
+            client = order.client
+            if client:
+                Notification.objects.create(
+                    order=order,
+                    client=client,
+                    file=file,
+                    type_notification=type_notification,
+                )
         # name_notification =  None
         # link = ""
         # for name_notifications in TYPE_NOTIFICATION:

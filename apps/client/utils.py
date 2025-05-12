@@ -77,7 +77,7 @@ def crete_pdf_bill(
 
         product_specification = ProductSpecification.objects.filter(
             specification=specification
-        ).order_by("id")
+        ).order_by("order_priority")
         print(type_delivery)
         # type_delivery = TypeDelivery.objects.get(id=type_delivery)
 

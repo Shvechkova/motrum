@@ -33,12 +33,14 @@ window.addEventListener("DOMContentLoaded", () => {
       const changeMotrumSaleInputWithoutSale = productItem.querySelector(
         ".change-motrum-sale-percent-without-sale"
       );
+      const counterInput = productItem.querySelector(".counter-item-bill")
 
       changeBtn.onclick = () => {
         changeBtn.style.display = "none";
         saveBtn.classList.add("show");
         deliveryDate.removeAttribute("disabled");
         discountInput.removeAttribute("disabled");
+        counterInput.removeAttribute("disabled");
         if (changePriceInput) {
 
           changePriceInput.value = getReplacedInputValue(changePriceInput);
@@ -83,7 +85,8 @@ window.addEventListener("DOMContentLoaded", () => {
           product_sale_motrum: changeMotrumSaleInput.value,
           date_delivery:deliveryDate,
           sale_client: discountInput.value,
-          product_price_motrum:changeMotrumPriceInput.value
+          product_price_motrum:changeMotrumPriceInput.value,
+          order_priority: counterInput.value
         };
         const data = JSON.stringify(dataObj);
 

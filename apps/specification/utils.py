@@ -93,7 +93,7 @@ def crete_pdf_specification(
         specifications = Specification.objects.get(id=specification)
         product_specification = ProductSpecification.objects.filter(
             specification=specification
-        ).order_by("id")
+        ).order_by("order_priority")
         type_delivery = TypeDelivery.objects.get(id=type_delivery)
         type_delivery_name = type_delivery.text
         kpp_req = account_requisites.requisitesKpp

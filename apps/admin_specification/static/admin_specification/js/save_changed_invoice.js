@@ -83,6 +83,8 @@ window.addEventListener("DOMContentLoaded", () => {
           const productCartId = specificationItem.getAttribute(
             "data-product-id-cart"
           );
+          const counterInput = specificationItem.querySelector(".counter-item-bill")
+
 
           const createTextDateDelivery = () => {
             const orderData = new Date(deliveryDate.value);
@@ -130,6 +132,7 @@ window.addEventListener("DOMContentLoaded", () => {
             vendor: vendor ? vendor : null,
             supplier: supplier ? supplier : null,
             id_cart: productCartId,
+            order_priority: counterInput.value
           };
 
           if (deliveryDate) {

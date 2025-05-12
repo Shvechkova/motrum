@@ -693,19 +693,21 @@ class Order(models.Model):
                 }
                 print(data)
                 subject = f"Заказ в магазине motrum.ru"
+        if IS_TESTING:
+            pass
+        else:
+            if need_email :
+                html_message = loader.render_to_string(
+                    html_message_template,
+                    {"context": data},
+                )
+                print(html_message)
 
-        if need_email:
-            html_message = loader.render_to_string(
-                html_message_template,
-                {"context": data},
-            )
-            print(html_message)
-
-            to_email = client.email
-            test = send_email_message_and_file_alternative(
-                subject, None, to_email, None, html_message
-            )
-            print("test-email", test)
+                to_email = client.email
+                test = send_email_message_and_file_alternative(
+                    subject, None, to_email, None, html_message
+                )
+                print("test-email", test)
 
     # создание документов счета
     def create_bill(
