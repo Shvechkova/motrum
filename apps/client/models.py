@@ -24,7 +24,7 @@ from apps.specification.utils import get_document_bill_path, get_shipment_doc_pa
 from apps.supplier.models import Discount
 from apps.user.models import AdminUser, CustomUser
 from middlewares.middlewares import RequestMiddleware
-from project.settings import BASE_DIR, BASE_MANAGER_FOR_BX, DOMIAN
+from project.settings import BASE_DIR, BASE_MANAGER_FOR_BX, DOMIAN, IS_TESTING
 
 
 # клиент на сайте

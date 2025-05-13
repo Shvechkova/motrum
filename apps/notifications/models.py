@@ -5,6 +5,8 @@ from middlewares.middlewares import RequestMiddleware
 from apps.client.models import Client, Order
 from apps.core.utils_web import send_email_message_html
 from django.template import loader
+
+from project.settings import IS_TESTING
 # Create your models here.
 
 TYPE_NOTIFICATION = (

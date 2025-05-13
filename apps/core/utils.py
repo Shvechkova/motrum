@@ -1137,7 +1137,11 @@ def save_specification(
             product_spes.comment = product_item["comment"]
             product_spes.id_cart_id = int(product_item["id_cart"])
             product_spes.product_price_catalog = product_price_catalog
-
+            
+            order_priority = product_item["order_priority"]
+            if order_priority != "" and order_priority != None and order_priority != " ":
+                product_spes.order_priority = order_priority
+                
             # запись дат
             date_delivery = product_item["date_delivery"]
             if date_delivery != "" and date_delivery != None:
@@ -1234,6 +1238,11 @@ def save_specification(
             product_spes.supplier_id = int(product_item["supplier"])
             product_spes.id_cart_id = int(product_item["id_cart"])
 
+            order_priority = product_item["order_priority"]
+            if order_priority != "" and order_priority != None and order_priority != " ":
+                product_spes.order_priority = order_priority
+                
+                
             date_delivery = product_item["date_delivery"]
             if date_delivery != "" and date_delivery != None:
                 product_spes.date_delivery = datetime.datetime.strptime(

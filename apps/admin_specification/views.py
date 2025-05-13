@@ -886,7 +886,7 @@ def create_specification(request):
                     "sale_client",
                 ),
             )
-            .order_by("id_product_cart")
+            .order_by("position_in_cart")
         )
 
     # корзины нет

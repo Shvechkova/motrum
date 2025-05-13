@@ -132,9 +132,9 @@ def add_iek(request):
 
     # logging.getLogger('fast_bitrix24').addHandler(logging.StreamHandler())
     
-    webhook = BITRIX_WEBHOOK
-    bx = Bitrix(webhook)
-   
+    # webhook = BITRIX_WEBHOOK
+    # bx = Bitrix(webhook)
+
 
     result = 1
     title = "TEST"
@@ -144,13 +144,13 @@ def add_iek(request):
 
 # тестовая страница скриптов
 def test(request):
-    def background_task():
-        # Долгосрочная фоновая задача
-        get_motrum_nomenclature()
+    # def background_task():
+    #     # Долгосрочная фоновая задача
+    #     get_motrum_nomenclature()
 
-    daemon_thread = threading.Thread(target=background_task)
-    daemon_thread.setDaemon(True)
-    daemon_thread.start()
+    # daemon_thread = threading.Thread(target=background_task)
+    # daemon_thread.setDaemon(True)
+    # daemon_thread.start()
 
     title = "Услуги"
 
